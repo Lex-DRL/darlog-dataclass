@@ -2,7 +2,7 @@
 """Type hints."""
 
 from typing import (
-	Any as _A,
+	Any as _A, Mapping as _Mapping,
 	ClassVar as _ClassVar, Protocol as _P, TypeVar as _TypeVar
 )
 
@@ -18,4 +18,7 @@ class P_Dataclass(_P):
 
 
 T = _TypeVar('T')
+T_KWMap = _TypeVar('T_KWMap', bound=_Mapping[str, _A])
+T_KWMap_co = _TypeVar('T_KWMap_co', bound=_Mapping[str, _A], covariant=True)
+
 T_Dataclass = _TypeVar('T_Dataclass', bound=P_Dataclass)

@@ -13,29 +13,50 @@ __all__ = [
 ]
 
 import typing as _t
+from typing import (
+	Dict as _Dict, Tuple as _Tuple,
+	overload as _overload
+)
 
 from abc import ABCMeta as __ABCMeta
 from dataclasses import fields as _fields, Field as _Field
 
 from .__typing import (
-	_A, T as _T,
+	_A, _Mapping, _P,
+	T as _T, T_KWMap as _T_KWMap, T_KWMap_co as _T_KWMap_co,
 	P_Dataclass as _P_Dataclass, T_Dataclass as _T_Dataclass
 )
 from ._conditional_args import *
 from ._conditional_args import _OptionalKwargsMeta
 
 
-def dc_fields_dict(obj: _T_Dataclass) -> _t.Dict[str, _A]:
-	"""Return all the field names/values from the dataclass instance - as dict. No deep-copy."""
+class __DictFactory(_P[_T_KWMap_co]):
+	def __call__(self, __data: _t.Iterable[_Tuple[str, _A]]) -> _T_KWMap_co: ...
+
+
+@_overload
+def dc_fields_dict(obj: _T_Dataclass) -> _Dict[str, _A]: ...
+@_overload
+def dc_fields_dict(obj: _T_Dataclass, *, dict_factory: __DictFactory[_T_KWMap]) -> _T_KWMap: ...
+
+def dc_fields_dict(obj: _T_Dataclass, *, dict_factory: __DictFactory[_Mapping[str, _A]] = dict) -> _Mapping[str, _A]:
+	"""Return the field names/values from the dataclass instance - as new dict/mapping.
+
+	Unlike built-in ``asdict()``, doesn't do it recursively. I.e., no deep-copy, and
+	nested dataclass instances are kept as-is.
+	"""
 	field_names = (field.name for field in _fields(obj))
-	return {
-		attr: getattr(obj, attr)
-		for attr in field_names
-	}
+	return dict_factory(
+		(name, getattr(obj, name))
+		for name in field_names
+	)
 
 
 def dc_override(obj: _T_Dataclass, **overrides) -> _T_Dataclass:
-	"""Copy a dataclass instance to a new one, with optional overrides."""
+	"""Copy a dataclass instance to a new one, with optional overrides.
+
+	No deep-copy (nested mutable objects are reused, unless overridden).
+	"""
 	obj_dict = dc_fields_dict(obj)
 	obj_dict.update(overrides)
 	dataclass_type = type(obj)
@@ -62,7 +83,7 @@ class FieldAccessPropsDC(metaclass=__ABCMeta):
 	"""
 
 	@classmethod
-	def fields(cls: _t.Type[_T_Dataclass]) -> _t.Tuple[_Field, ...]:
+	def fields(cls: _t.Type[_T_Dataclass]) -> _Tuple[_Field, ...]:
 		""" Class method: full equivalent of ``fields(MyDataClass)``, but also...
 
 		Cached per dataclass: all further calls reuse the first result.
@@ -77,7 +98,7 @@ class FieldAccessPropsDC(metaclass=__ABCMeta):
 			return fields
 
 	@classmethod
-	def field_names(cls: _t.Type[_T_Dataclass]) -> _t.Tuple[str, ...]:
+	def field_names(cls: _t.Type[_T_Dataclass]) -> _Tuple[str, ...]:
 		"""Class method: ``tuple`` with names of all the dataclass fields.
 
 		Cached per dataclass: all further calls reuse the first result.
