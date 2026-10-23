@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 [project]
 name = "darlog-dataclass"
 #dynamic = ["version"]
-version = "0.0.0"
+version = "0.0.1a0"
 description = "ABSOLUTELY essential utils for dataclasses, that should've always been there. No bloat."
 authors = [
 	{ name="Lex Darlog (Lex-DRL)" },
